@@ -124,11 +124,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     tr.appendChild(tdRound);
                 }
 
-                // 2. Player Name Cell - Use unique emoji
+                // 2. Player Name Cell - Wrap content in a span
                 const tdPlayer = document.createElement('td');
-                tdPlayer.textContent = `${playerInfo[player].emoji} ${playerInfo[player].name}`;
-                tdPlayer.classList.add('player-name-cell');
-                tr.appendChild(tdPlayer);
+                tdPlayer.classList.add('player-name-cell'); // Keep class on TD
+
+                const playerNameSpan = document.createElement('span'); // <<< Create SPAN
+                playerNameSpan.classList.add('player-name-content'); // <<< Add class to SPAN
+                if (playerInfo[player]) {
+                    playerNameSpan.textContent = `${playerInfo[player].emoji} ${playerInfo[player].name}`;
+                } else {
+                    playerNameSpan.textContent = `Spelare ${player}`; // Fallback
+                }
+                tdPlayer.appendChild(playerNameSpan); // <<< Append SPAN to TD
+                tr.appendChild(tdPlayer); // Append TD to TR
 
                 // 3. Bid Cell (Select)
                 const tdBid = document.createElement('td');
@@ -307,50 +315,100 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function calculateScores() {
         const playerTotals = {};
-        for (let i = 1; i <= numPlayers; i++) {
-            playerTotals[i] = 0;
-        }
+        for (let i = 1; i <= numPlayers; i++) { playerTotals[i] = 0; }
 
+        // --- Determine latest fully completed round ---
+        let maxCompletedRound = 0;
+        for (let r = 1; r <= numRounds; r++) {
+            let roundComplete = true;
+            for (let p = 1; p <= numPlayers; p++) {
+                const bidSelect = document.getElementById(`r${r}-p${p}-bid`);
+                const tricksSelect = document.getElementById(`r${r}-p${p}-tricks`);
+                // Check if BOTH selects have a non-empty value for this player
+                if (!bidSelect || !tricksSelect || bidSelect.value === "" || tricksSelect.value === "") {
+                    roundComplete = false;
+                    break; // No need to check other players for this round
+                }
+            }
+            if (roundComplete) {
+                maxCompletedRound = r;
+            } else {
+                break; // Stop checking rounds once an incomplete one is found
+            }
+        }
+        // console.log("Max completed round:", maxCompletedRound); // For debugging
+
+        // --- Calculate scores and totals ---
         const rows = tableBody.querySelectorAll('tr');
         rows.forEach(row => {
             const rowIdMatch = row.id.match(/r(\d+)-p(\d+)-row/);
             if (!rowIdMatch) return;
-
             const round = parseInt(rowIdMatch[1]);
             const player = parseInt(rowIdMatch[2]);
-
             const bidSelect = row.querySelector(`#r${round}-p${player}-bid`);
             const tricksSelect = row.querySelector(`#r${round}-p${player}-tricks`);
             const scoreDisplay = row.querySelector(`#r${round}-p${player}-score`);
-            const bonusButton = row.querySelector(`#r${round}-p${player}-bonus-btn`);
+            const bonusButton = row.querySelector(`#r${round}-p${player}-bonus-btn`); // Needed if recalculating
 
             if (!bidSelect || !tricksSelect || !scoreDisplay || !bonusButton) return;
 
+            // --- Recalculate score here for consistency ---
             const bidValue = bidSelect.value;
             const tricksValue = tricksSelect.value;
             const bid = bidValue === "" ? NaN : parseInt(bidValue);
             const tricksWon = tricksValue === "" ? NaN : parseInt(tricksValue);
-
             const mermaidCapturesSK = bonusButton.dataset.mermaid === 'true';
             const piratesCapturedBySK = parseInt(bonusButton.dataset.pirates || '0');
 
             let roundScore = 0;
             if (!isNaN(bid) && !isNaN(tricksWon)) {
-                 if (bid === tricksWon) { // Correct bid
+                 if (bid === tricksWon) {
                     roundScore = (bid === 0) ? round * 10 : bid * 20;
                     if (mermaidCapturesSK) roundScore += 50;
                     roundScore += piratesCapturedBySK * 30;
-                } else { // Incorrect bid
+                } else {
                     roundScore = (bid === 0) ? round * -10 : Math.abs(bid - tricksWon) * -10;
                 }
             }
-            scoreDisplay.textContent = roundScore;
+            scoreDisplay.textContent = roundScore; // Update the score display
+            // --- End Recalculation ---
 
-            // Add round score to player's total
             if (playerTotals.hasOwnProperty(player)) {
                 playerTotals[player] += roundScore;
             }
-        }); // End of rows.forEach loop
+        });
+
+        // --- Determine "Usel" status after round 3 ---
+        const isPlayerUsel = {}; // Store status { playerIndex: boolean }
+        if (maxCompletedRound >= 3) {
+            for (let i = 1; i <= numPlayers; i++) {
+                // Condition: Total score is negative
+                if (playerTotals[i] < 0) {
+                     isPlayerUsel[i] = true;
+                } else {
+                     isPlayerUsel[i] = false;
+                }
+                 // Future enhancement: Check if last AND far behind non-negative players
+            }
+        } else {
+            // Before round 3 is complete, no one is "usel"
+             for (let i = 1; i <= numPlayers; i++) {
+                isPlayerUsel[i] = false;
+             }
+        }
+
+        // --- Apply/Remove Visual Effects on Table Rows ---
+        rows.forEach(row => {
+            const rowIdMatch = row.id.match(/r(\d+)-p(\d+)-row/);
+            if (!rowIdMatch) return;
+            const player = parseInt(rowIdMatch[2]);
+
+            if (isPlayerUsel[player]) {
+                row.classList.add('usel-effect');
+            } else {
+                row.classList.remove('usel-effect');
+            }
+        });
 
         // --- Assign Medals based on Total Scores ---
 
@@ -383,21 +441,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Update the total scores display in the single footer cell ---
         const totalsCell = document.getElementById('player-totals-list-cell');
         if (totalsCell) {
-            totalsCell.innerHTML = ''; // Clear previous content
+            totalsCell.innerHTML = '';
             const scoresList = document.createElement('div');
             scoresList.className = 'footer-scores-list';
 
-            // Loop 1 to numPlayers to maintain the original player order
             for (let i = 1; i <= numPlayers; i++) {
-                if (playerInfo.hasOwnProperty(i)) { // Check if player exists for this index
-                    const pInfo = playerInfo[i]; // Get player's info object
+                if (playerInfo.hasOwnProperty(i)) {
+                    const pInfo = playerInfo[i];
                     const playerScore = playerTotals[i] || 0;
-                    const medal = playerMedals[i] || ''; // Get medal for this player index
+                    const medal = playerMedals[i] || '';
+                    const uselText = isPlayerUsel[i] ? " (Usel är du!)" : ""; // <<< Add Usel text
 
                     const scoreEntry = document.createElement('div');
                     scoreEntry.className = 'footer-score-entry';
-                    // Use player's specific emoji here too
-                    scoreEntry.textContent = `${pInfo.emoji} ${medal ? medal + ' ' : ''}${pInfo.name}: ${playerScore}`;
+                    scoreEntry.textContent = `${pInfo.emoji} ${medal ? medal + ' ' : ''}${pInfo.name}${uselText}: ${playerScore}`; // <<< Append Usel text
                     scoresList.appendChild(scoreEntry);
                 }
             }
@@ -407,23 +464,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Function to handle New Game Button Click ---
     function startNewGame() {
-        if (confirm('Är du säker på att du vill starta en ny match?\n(Poängen nollställs men spelare behålls)')) {
-            // Call initializeTable, telling it to reuse players
-            initializeTable(true);
+        // Instead of confirm(), call the function to open the custom modal
+        openNewGameConfirmModal();
+    }
+
+    // --- NEW Function to open the New Game confirmation modal ---
+    function openNewGameConfirmModal() {
+        // Remove existing modal if any
+        const existingModal = document.getElementById('new-game-confirm-modal');
+        if (existingModal) {
+            existingModal.remove();
         }
+
+        // Create modal elements
+        const modal = document.createElement('div');
+        modal.id = 'new-game-confirm-modal';
+        modal.className = 'confirm-modal'; // Use a general class or reuse bonus-modal? Let's use new one
+
+        const header = document.createElement('h4');
+        header.textContent = 'Starta ny match?';
+        modal.appendChild(header);
+
+        const message = document.createElement('p');
+        message.textContent = 'Nuvarande poäng nollställs, men spelarna behålls.';
+        modal.appendChild(message);
+
+        // Button container for better layout
+        const buttonDiv = document.createElement('div');
+        buttonDiv.className = 'confirm-modal-buttons';
+
+        // Confirm Button ("Ja")
+        const confirmButton = document.createElement('button');
+        confirmButton.textContent = 'Ja, starta ny';
+        confirmButton.className = 'confirm-btn yes';
+        confirmButton.addEventListener('click', () => {
+            initializeTable(true); // Start new game reusing players
+            modal.remove(); // Close modal
+        });
+        buttonDiv.appendChild(confirmButton);
+
+        // Cancel Button ("Avbryt")
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Avbryt';
+        cancelButton.className = 'confirm-btn cancel';
+        cancelButton.addEventListener('click', () => {
+            modal.remove(); // Close modal
+        });
+        buttonDiv.appendChild(cancelButton);
+
+        modal.appendChild(buttonDiv);
+
+        // Append modal to body
+        document.body.appendChild(modal);
     }
 
     // --- Event Listeners ---
-    numPlayersSelect.addEventListener('change', () => initializeTable(false)); // Standard init
-    newGameBtnTop.addEventListener('click', startNewGame); // Add listener
-    newGameBtnBottom.addEventListener('click', startNewGame); // Add listener
+    numPlayersSelect.addEventListener('change', () => initializeTable(false));
+    newGameBtnTop.addEventListener('click', startNewGame);
+    newGameBtnBottom.addEventListener('click', startNewGame);
 
-    document.addEventListener('click', (event) => { // Close modal on outside click
-        const modal = document.getElementById('bonus-modal-dynamic');
-        if (modal && !modal.contains(event.target) && !event.target.classList.contains('bonus-button')) {
-            modal.remove();
+    document.addEventListener('click', (event) => {
+        // Close BOTH modals on outside click
+        const bonusModal = document.getElementById('bonus-modal-dynamic');
+        const confirmModal = document.getElementById('new-game-confirm-modal');
+
+        if (bonusModal && !bonusModal.contains(event.target) && !event.target.classList.contains('bonus-button')) {
+            bonusModal.remove();
+        }
+        if (confirmModal && !confirmModal.contains(event.target) && !event.target.classList.contains('new-game-btn')) {
+            confirmModal.remove();
         }
     });
 
-    initializeTable(false); // Initial load generates players
+    initializeTable(false);
 }); 

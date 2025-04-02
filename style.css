@@ -281,4 +281,101 @@ td.player-name-cell {
 #new-game-btn-bottom {
     display: block; /* Make it a block element */
     margin: 15px auto; /* Auto margins for horizontal centering */
-} 
+}
+
+/* Easter Egg Effect for losing players */
+tr.usel-effect {
+    /* Remove direct styling from the row */
+    /* filter: blur(0.8px); */
+    /* transform: rotate(-30deg) scale(0.95); */
+    /* opacity: 0.9; */
+    /* transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease-in-out; */
+    /* Background handled by striping */
+}
+
+/* Apply rotation ONLY to the span inside the player name cell of an 'usel' row */
+tr.usel-effect td.player-name-cell span.player-name-content {
+    display: inline-block; /* Needed for transform to work correctly */
+    transform: rotate(-18deg); /* CHANGED angle to -18deg */
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    transform-origin: center center; /* Rotate around its center */
+    color: inherit;
+}
+
+/* Player name cell in body (general styling) */
+td.player-name-cell {
+    text-align: left;
+    padding-left: 10px;
+    /* Ensure the TD itself aligns correctly */
+    vertical-align: middle;
+}
+
+
+/* Remove styles for td.round-cell within usel-effect if they existed */
+/* tr.usel-effect td.round-cell { ... } */
+
+
+/* Styling for the New Game Confirmation Modal */
+.confirm-modal { /* Similar to bonus-modal */
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #f3eac2; /* Parchment background */
+    border: 3px solid #8B4513; /* Dark brown border */
+    border-radius: 10px; padding: 20px 25px; /* Slightly wider padding */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    z-index: 100; min-width: 300px; /* Ensure enough width */
+    color: #3a1d1b;
+    text-align: center; /* Center text */
+}
+
+.confirm-modal h4 { /* Similar to bonus-modal h4 */
+    margin: 0 0 10px 0;
+    color: #6b3e2e;
+    font-size: 1.3em; /* Slightly larger header */
+}
+
+.confirm-modal p { /* Style for the message */
+    margin: 0 0 20px 0; /* Space before buttons */
+    font-size: 1em;
+}
+
+/* Container for buttons */
+.confirm-modal-buttons {
+    display: flex;
+    justify-content: space-around; /* Space out buttons */
+    gap: 15px; /* Add gap between buttons */
+}
+
+/* Styling for buttons inside the confirm modal */
+.confirm-modal .confirm-btn {
+    padding: 10px 20px; /* Larger buttons */
+    border-radius: 5px;
+    border: none;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.confirm-modal .confirm-btn:hover {
+    transform: scale(1.03); /* Slight scale on hover */
+}
+
+/* Specific button styles */
+.confirm-modal .confirm-btn.yes {
+    background-color: #5cb85c; /* Green for confirm */
+    color: white;
+}
+.confirm-modal .confirm-btn.yes:hover {
+    background-color: #4cae4c;
+}
+
+.confirm-modal .confirm-btn.cancel {
+    background-color: #d9534f; /* Red for cancel */
+    color: white;
+}
+.confirm-modal .confirm-btn.cancel:hover {
+    background-color: #c9302c;
+}
+
+/* ... rest of styles ... */ 
