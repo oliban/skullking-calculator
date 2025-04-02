@@ -77,23 +77,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 const td = document.createElement('td');
                 td.id = `r${round}-p${player}`;
 
-                // Bid input
-                const bidInput = document.createElement('input');
-                bidInput.type = 'number';
-                bidInput.id = `r${round}-p${player}-bid`;
-                bidInput.min = '0';
-                bidInput.placeholder = 'Bud';
-                bidInput.title = 'Antal budade stick';
-                bidInput.addEventListener('input', calculateScores);
+                // Bid select (Replaces Bid input)
+                const bidSelect = document.createElement('select');
+                bidSelect.id = `r${round}-p${player}-bid`;
+                bidSelect.title = 'Antal budade stick';
+                bidSelect.addEventListener('change', calculateScores); // Use 'change' for select
+                const defaultBidOption = document.createElement('option');
+                defaultBidOption.value = ""; // Default empty value
+                defaultBidOption.textContent = "Bud";
+                defaultBidOption.disabled = true;
+                defaultBidOption.selected = true;
+                bidSelect.appendChild(defaultBidOption);
+                for (let i = 0; i <= round; i++) { // Options 0 to round number
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    bidSelect.appendChild(option);
+                }
 
-                // Tricks won input
-                const tricksInput = document.createElement('input');
-                tricksInput.type = 'number';
-                tricksInput.id = `r${round}-p${player}-tricks`;
-                tricksInput.min = '0';
-                tricksInput.placeholder = 'Stick';
-                tricksInput.title = 'Antal vunna stick';
-                tricksInput.addEventListener('input', calculateScores);
+                // Tricks won select (Replaces Tricks won input)
+                const tricksSelect = document.createElement('select');
+                tricksSelect.id = `r${round}-p${player}-tricks`;
+                tricksSelect.title = 'Antal vunna stick';
+                tricksSelect.addEventListener('change', calculateScores); // Use 'change' for select
+                const defaultTricksOption = document.createElement('option');
+                defaultTricksOption.value = ""; // Default empty value
+                defaultTricksOption.textContent = "Stick";
+                defaultTricksOption.disabled = true;
+                defaultTricksOption.selected = true;
+                tricksSelect.appendChild(defaultTricksOption);
+                for (let i = 0; i <= round; i++) { // Options 0 to round number
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    tricksSelect.appendChild(option);
+                }
 
                 // Bonus inputs
                 const bonusDiv = document.createElement('div');
@@ -133,8 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 bonusDiv.appendChild(pirateLabel);
                 bonusDiv.appendChild(pirateSelect);
 
-                td.appendChild(bidInput);
-                td.appendChild(tricksInput);
+                // Append the new SELECT elements instead of INPUT elements
+                td.appendChild(bidSelect);
+                td.appendChild(tricksSelect);
                 td.appendChild(scoreDisplay);
                 td.appendChild(bonusDiv);
                 tr.appendChild(td);
@@ -151,23 +170,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // Use the current numRounds determined by initializeTable
         for (let round = 1; round <= numRounds; round++) {
             for (let player = 1; player <= numPlayers; player++) {
-                const bidInput = document.getElementById(`r${round}-p${player}-bid`);
-                const tricksInput = document.getElementById(`r${round}-p${player}-tricks`);
+                // Get SELECT elements instead of INPUT
+                const bidSelect = document.getElementById(`r${round}-p${player}-bid`);
+                const tricksSelect = document.getElementById(`r${round}-p${player}-tricks`);
                 const mermaidCheckbox = document.getElementById(`r${round}-p${player}-mermaid`);
-                const pirateInput = document.getElementById(`r${round}-p${player}-pirates`);
+                const pirateInput = document.getElementById(`r${round}-p${player}-pirates`); // This is already a select
                 const scoreDisplay = document.getElementById(`r${round}-p${player}-score`);
 
                 // Ensure elements exist before trying to access value
-                if (!bidInput || !tricksInput || !mermaidCheckbox || !pirateInput || !scoreDisplay) continue;
+                if (!bidSelect || !tricksSelect || !mermaidCheckbox || !pirateInput || !scoreDisplay) continue;
 
-                const bid = parseInt(bidInput.value);
-                const tricksWon = parseInt(tricksInput.value);
+                // Get selected values, handle default "" case
+                const bidValue = bidSelect.value;
+                const tricksValue = tricksSelect.value;
+                const bid = bidValue === "" ? NaN : parseInt(bidValue);
+                const tricksWon = tricksValue === "" ? NaN : parseInt(tricksValue);
+
                 const mermaidCapturesSK = mermaidCheckbox.checked;
-                const piratesCapturedBySK = parseInt(pirateInput.value) || 0; // Get value from select
+                const piratesCapturedBySK = parseInt(pirateInput.value) || 0;
 
                 let roundScore = 0;
 
-                // Only calculate if both bid and tricks are entered
+                // Only calculate if both bid and tricks have valid selections (not NaN)
                 if (!isNaN(bid) && !isNaN(tricksWon)) {
                     if (bid === tricksWon) {
                         // Correct bid
