@@ -1,2 +1,0 @@
-# skullking-calculator
-# Yeah
