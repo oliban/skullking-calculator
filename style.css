@@ -1,25 +1,65 @@
 body {
     font-family: 'Papyrus', fantasy, sans-serif; /* Thematic font, fallback to fantasy/sans-serif */
-    background-color: #f3eac2; /* Parchment-like color */
-    color: #4a2c2a; /* Dark brown */
+    background-color: #f3eac2; /* Parchment */
+    color: #3a1d1b; /* Darker brown text */
     margin: 0;
-    padding: 20px;
+    padding: 10px; /* Reduced padding for smaller screens */
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
 h1 {
-    color: #8B4513; /* Saddle brown */
-    text-shadow: 1px 1px 2px #000;
+    color: #6b3e2e; /* Darker saddle brown */
+    text-shadow: 1px 1px 2px #777;
+    font-size: 1.8em; /* Slightly smaller H1 on mobile */
+    margin-bottom: 10px;
 }
 
-.controls {
-    margin-bottom: 20px;
-    background-color: rgba(210, 180, 140, 0.5); /* Tan, slightly transparent */
+.controls, .info-section {
+    margin-bottom: 15px;
+    background-color: rgba(210, 180, 140, 0.6); /* Tan, slightly less transparent */
     padding: 10px 15px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px; /* Limit width on larger screens */
+    box-sizing: border-box;
+}
+
+.info-section {
+    text-align: center;
+    margin-top: 20px; /* Add space above the section */
+}
+
+.legend {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #8B4513; /* Keep border */
+    font-size: 0.9em;
+    text-align: left;
+}
+
+.legend h4 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    text-align: center;
+    color: #6b3e2e;
+}
+
+.legend p {
+    margin: 5px 0; /* Adjust spacing */
+}
+
+.legend ul {
+    list-style-position: inside;
+    padding-left: 0; /* Remove default padding */
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.legend li {
+    margin-bottom: 3px;
 }
 
 label {
@@ -27,103 +67,174 @@ label {
     font-weight: bold;
 }
 
-select {
+select, input[type="number"] { /* Apply base styles to select too */
     padding: 5px;
     border-radius: 4px;
     border: 1px solid #8B4513;
     background-color: #fff;
+    vertical-align: middle; /* Align select with label */
 }
 
 .table-container {
-    width: 95%;
-    max-width: 1000px; /* Limit max width */
-    overflow-x: auto; /* Add scroll for smaller screens */
+    width: 100%; /* Take full width on mobile */
+    max-width: 1000px; /* Limit max width on desktop */
+    overflow-x: auto; /* Essential for mobile */
     border: 2px solid #8B4513; /* Dark brown border */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     margin-bottom: 20px;
+    background-color: #fffef8; /* Lighter off-white background */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: #fffaf0; /* Floral white, slightly off-white */
+    /* Background moved to container */
 }
 
 th, td {
-    border: 1px solid #deb887; /* Burlywood, lighter brown */
-    padding: 8px;
+    border: 1px solid #ccaa88; /* Lighter, less saturated brown border */
+    padding: 6px 4px; /* Reduced padding for mobile */
     text-align: center;
-    min-width: 120px; /* Ensure columns have some width */
+    min-width: 100px; /* Slightly reduced min-width */
+    white-space: nowrap; /* Prevent headers/cells from wrapping */
 }
 
 th {
-    background-color: #d2b48c; /* Tan */
-    color: #4a2c2a;
+    background-color: #b08d57; /* Darker tan/light brown */
+    color: #fff; /* White text for contrast */
     font-weight: bold;
+    position: sticky; /* Make header sticky */
+    top: 0; /* Stick to the top */
+    z-index: 1;
 }
 
-tr:nth-child(even) {
-    background-color: #f5f5dc; /* Beige */
+/* Style for editable player headers */
+thead th[contenteditable="true"] {
+    cursor: text;
+    background-color: #a07d47; /* Slightly different background to indicate editability */
+}
+thead th[contenteditable="true"]:focus {
+    outline: 1px dashed #fff; /* Outline when focused for editing */
+    background-color: #906d37;
 }
 
-tr:hover {
-    background-color: #eaddbf; /* Lighter parchment on hover */
+/* Sticky headers for first column (Round/Total) */
+thead th:first-child,
+tfoot td:first-child { /* Keep the brown background only for the main header and footer label */
+    position: sticky;
+    left: 0;
+    background-color: #b08d57; /* Match header bg */
+    color: #fff; /* Match header text */
+    z-index: 2; /* Above scrolling content, below header */
+}
+
+/* Sticky styling for Round numbers in body */
+tbody th {
+    position: sticky;
+    left: 0;
+    background-color: #e8dcc5; /* Set fixed light background */
+    color: #3a1d1b; /* Use default text color */
+    z-index: 2;
+}
+
+tbody tr:nth-child(even) th,
+tbody tr:hover th { /* Define text color for these states */
+    color: #3a1d1b;
+}
+
+tfoot {
+    position: sticky; /* Make footer sticky */
+    bottom: 0; /* Stick to the bottom */
+    z-index: 1;
 }
 
 tfoot td {
     font-weight: bold;
-    background-color: #d2b48c; /* Tan */
+    background-color: #b08d57; /* Match header bg */
+    color: #fff; /* Match header text */
 }
 
-input[type="number"], .score-display {
-    width: 40px;
-    padding: 4px;
+input[type="number"], .score-display, .bonus-section select {
+    width: 35px;
+    padding: 4px 2px;
     text-align: center;
-    border: 1px solid #ccc;
+    border: 1px solid #aaa;
     border-radius: 4px;
-    margin: 0 2px; /* Small margin between inputs */
+    margin: 1px;
     box-sizing: border-box;
+    font-size: 0.9em;
+    vertical-align: middle;
+}
+
+/* Center select text */
+.bonus-section select {
+    text-align: center; /* Fallback for browsers not supporting text-align-last */
+    text-align-last: center; /* Center the selected option text */
+    padding: 4px 0px; /* Adjust padding for select */
+    width: 40px; /* Slightly wider for dropdown arrow */
 }
 
 .score-display {
-    display: inline-block; /* Make spans behave like inputs width-wise */
-    background-color: #eee; /* Slightly gray background for calculated score */
+    display: inline-block;
+    background-color: #e8e8e8; /* Slightly lighter gray */
     font-weight: bold;
-    min-width: 50px; /* Slightly wider for score */
-    padding: 4px;
-    vertical-align: middle; /* Align with inputs */
+    min-width: 40px; /* Slightly wider for score */
+    padding: 4px 2px;
 }
 
 .bonus-section {
-    font-size: 0.8em;
-    margin-top: 4px;
-    white-space: nowrap; /* Prevent wrapping */
+    font-size: 0.75em;
+    margin-top: 3px;
+    white-space: nowrap;
+    display: flex; /* Align bonus items */
+    align-items: center;
+    justify-content: center;
 }
 
 .bonus-section label {
-    margin-right: 2px;
+    margin-right: 1px;
     font-size: 0.9em;
 }
 
 .bonus-section input[type="checkbox"] {
     vertical-align: middle;
-    margin-left: 5px;
+    margin: 0 3px 0 1px;
     cursor: pointer;
 }
 
-.bonus-section input[type="number"] {
-    width: 35px; /* Smaller input for pirate count */
-    padding: 2px;
-    margin-left: 5px;
-    vertical-align: middle;
-}
-
-/* Input spinners can be ugly, hide them if desired (Webkit/Mozilla) */
+/* Hide input spinners */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 input[type=number] {
-  -moz-appearance: textfield; /* Firefox */
+  -moz-appearance: textfield;
+}
+
+/* Media Query for larger screens (basic example) */
+@media (min-width: 768px) {
+    body {
+        padding: 20px; /* Restore padding */
+    }
+    h1 {
+        font-size: 2.5em; /* Larger H1 */
+    }
+    th, td {
+        padding: 8px; /* Restore padding */
+        min-width: 120px; /* Restore min-width */
+    }
+    input[type="number"], .score-display, .bonus-section select {
+        width: 40px; /* Restore input size */
+        font-size: 1em;
+    }
+    .bonus-section select {
+         width: 45px; /* Slightly wider select */
+    }
+    .score-display {
+        min-width: 50px;
+    }
+     .bonus-section {
+        font-size: 0.8em;
+    }
 } 

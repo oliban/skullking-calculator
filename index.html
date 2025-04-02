@@ -15,9 +15,9 @@
         <select id="num-players">
             <option value="2">2</option>
             <option value="3">3</option>
-            <option value="4">4</option>
+            <option value="4" selected>4</option>
             <option value="5">5</option>
-            <option value="6" selected>6</option>
+            <option value="6">6</option>
         </select>
     </div>
 
@@ -42,5 +42,24 @@
     </div>
 
     <script src="script.js"></script>
+
+    <div class="info-section">
+        <p>Spelar <span id="round-count-display">8</span> rundor.</p>
+        <div class="legend">
+            <h4>Förklaring:</h4>
+            <p><strong>Poängräkning:</strong></p>
+            <ul>
+                <li><strong>Rätt bud (>0):</strong> +20 poäng per stick.</li>
+                <li><strong>Rätt bud (0):</strong> +10 poäng * aktuell runda.</li>
+                <li><strong>Fel bud:</strong> -10 poäng * skillnaden mellan bud och stick.</li>
+                <li><strong>Fel bud (0 bud, >0 stick):</strong> -10 poäng * aktuell runda.</li>
+            </ul>
+            <p><strong>Bonus (endast vid rätt bud):</strong></p>
+            <ul>
+                <li><strong>M+SK:</strong> Fångade Skull King med Sjöjungfru: +50 poäng.</li>
+                <li><strong>SK+P x:</strong> Fångade Pirater med Skull King: +30 poäng per Pirat.</li>
+            </ul>
+        </div>
+    </div>
 </body>
 </html> 
