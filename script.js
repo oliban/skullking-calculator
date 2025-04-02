@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const newGameBtnTop = document.getElementById('new-game-btn-top');
     const newGameBtnBottom = document.getElementById('new-game-btn-bottom');
 
+    const renamePlayersBtn = document.getElementById('rename-players-btn'); // Get rename button
+
     let numPlayers = parseInt(numPlayersSelect.value);
     let numRounds = 8; // Default
     let playerInfo = {}; // Use object to store { name: "...", emoji: "..." }
@@ -88,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!reusePlayers) {
             let assignedNames = [];
             for (let i = 1; i <= numPlayers; i++) {
-                const defaultName = getRandomPirateName(assignedNames);
-                assignedNames.push(defaultName);
+            const defaultName = getRandomPirateName(assignedNames);
+            assignedNames.push(defaultName);
                 playerInfo[i] = {
                     name: defaultName,
                     emoji: getUniqueEmoji(i - 1)
@@ -360,12 +362,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const mermaidCapturesSK = bonusButton.dataset.mermaid === 'true';
             const piratesCapturedBySK = parseInt(bonusButton.dataset.pirates || '0');
 
-            let roundScore = 0;
-            if (!isNaN(bid) && !isNaN(tricksWon)) {
-                 if (bid === tricksWon) {
+                let roundScore = 0;
+                if (!isNaN(bid) && !isNaN(tricksWon)) {
+                    if (bid === tricksWon) {
                     roundScore = (bid === 0) ? round * 10 : bid * 20;
                     if (mermaidCapturesSK) roundScore += 50;
-                    roundScore += piratesCapturedBySK * 30;
+                        roundScore += piratesCapturedBySK * 30;
                 } else {
                     roundScore = (bid === 0) ? round * -10 : Math.abs(bid - tricksWon) * -10;
                 }
@@ -518,21 +520,143 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(modal);
     }
 
+    // --- NEW Function to open the Rename Players modal ---
+    function openRenamePlayersModal() {
+        // Remove existing modal if any
+        const existingModal = document.getElementById('rename-players-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create modal elements
+        const modal = document.createElement('div');
+        modal.id = 'rename-players-modal';
+        modal.className = 'rename-modal'; // New class for styling
+
+        const header = document.createElement('h4');
+        header.textContent = 'Döp om spelare';
+        modal.appendChild(header);
+
+        const form = document.createElement('form'); // Use form for inputs
+        form.addEventListener('submit', (e) => e.preventDefault()); // Prevent actual form submission
+
+        // Create input fields for each current player
+        for (const [index, info] of Object.entries(playerInfo)) {
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'rename-player-entry';
+
+            const label = document.createElement('label');
+            label.htmlFor = `rename-p${index}`;
+            // Include emoji in label
+            label.textContent = `${info.emoji}: `;
+            playerDiv.appendChild(label);
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = `rename-p${index}`;
+            input.dataset.playerIndex = index; // Store index for saving
+            input.value = info.name; // Pre-fill current name
+            input.maxLength = 25; // Limit name length
+            input.required = true; // Basic validation
+            playerDiv.appendChild(input);
+
+            form.appendChild(playerDiv);
+        }
+        modal.appendChild(form);
+
+
+        // Button container
+        const buttonDiv = document.createElement('div');
+        buttonDiv.className = 'rename-modal-buttons'; // Use specific class
+
+        // Save Button
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Spara namn';
+        saveButton.className = 'rename-btn save';
+        saveButton.type = 'button'; // Prevent form submission if inside form
+        saveButton.addEventListener('click', () => {
+            let namesChanged = false;
+            // Get all inputs and update playerInfo
+            const inputs = form.querySelectorAll('input[type="text"]');
+            inputs.forEach(input => {
+                const index = input.dataset.playerIndex;
+                const newName = input.value.trim();
+                if (newName && playerInfo[index] && playerInfo[index].name !== newName) {
+                    playerInfo[index].name = newName;
+                    namesChanged = true;
+                }
+            });
+
+            if (namesChanged) {
+                updatePlayerNameDisplay(); // Update names in table/footer
+            }
+            modal.remove(); // Close modal
+        });
+        buttonDiv.appendChild(saveButton);
+
+        // Cancel Button
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Avbryt';
+        cancelButton.className = 'rename-btn cancel';
+        cancelButton.type = 'button';
+        cancelButton.addEventListener('click', () => {
+            modal.remove(); // Close modal
+        });
+        buttonDiv.appendChild(cancelButton);
+
+        modal.appendChild(buttonDiv);
+
+        // Append modal to body
+        document.body.appendChild(modal);
+
+        // Focus the first input field
+        const firstInput = form.querySelector('input[type="text"]');
+        if (firstInput) {
+            firstInput.focus();
+            firstInput.select();
+        }
+    }
+
+    // --- NEW Function to update player names in the UI ---
+    function updatePlayerNameDisplay() {
+        // Update names in table body
+        const nameCells = tableBody.querySelectorAll('td.player-name-cell span.player-name-content');
+        nameCells.forEach(span => {
+            // Extract player index from parent row ID (a bit fragile)
+            const row = span.closest('tr');
+            const rowIdMatch = row ? row.id.match(/r\d+-p(\d+)-row/) : null;
+            if (rowIdMatch) {
+                const playerIndex = rowIdMatch[1];
+                if (playerInfo[playerIndex]) {
+                    span.textContent = `${playerInfo[playerIndex].emoji} ${playerInfo[playerIndex].name}`;
+                }
+            }
+        });
+
+        // Update names in footer (requires recalculating scores to redraw footer)
+        calculateScores(); // Re-running calculateScores will update the footer list
+    }
+
     // --- Event Listeners ---
     numPlayersSelect.addEventListener('change', () => initializeTable(false));
     newGameBtnTop.addEventListener('click', startNewGame);
     newGameBtnBottom.addEventListener('click', startNewGame);
+    renamePlayersBtn.addEventListener('click', openRenamePlayersModal); // Listener for new button
 
     document.addEventListener('click', (event) => {
-        // Close BOTH modals on outside click
+        // Close ALL modals on outside click
         const bonusModal = document.getElementById('bonus-modal-dynamic');
         const confirmModal = document.getElementById('new-game-confirm-modal');
+        const renameModal = document.getElementById('rename-players-modal'); // Add rename modal
 
         if (bonusModal && !bonusModal.contains(event.target) && !event.target.classList.contains('bonus-button')) {
             bonusModal.remove();
         }
         if (confirmModal && !confirmModal.contains(event.target) && !event.target.classList.contains('new-game-btn')) {
             confirmModal.remove();
+        }
+        if (renameModal && !renameModal.contains(event.target) && !event.target.classList.contains('rename-btn')) { // Check correct button class
+            renameModal.remove();
         }
     });
 

@@ -378,4 +378,98 @@ td.player-name-cell {
     background-color: #c9302c;
 }
 
+/* Styling for Rename Players Modal */
+.rename-modal { /* Similar to other modals */
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #f3eac2;
+    border: 3px solid #8B4513;
+    border-radius: 10px; padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    z-index: 100; min-width: 320px; /* Maybe wider for inputs */
+    color: #3a1d1b;
+}
+
+.rename-modal h4 {
+    margin: 0 0 15px 0;
+    color: #6b3e2e;
+    text-align: center;
+    font-size: 1.3em;
+}
+
+/* Styling for each player input row */
+.rename-player-entry {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.rename-player-entry label {
+    margin-right: 8px;
+    font-size: 1.1em; /* Make emoji/label clear */
+    width: 40px; /* Fixed width for alignment */
+    text-align: right;
+}
+
+.rename-player-entry input[type="text"] {
+    flex-grow: 1; /* Allow input to take remaining space */
+    padding: 8px 10px;
+    border: 1px solid #8B4513;
+    border-radius: 4px;
+    font-size: 1em;
+    background-color: #fff;
+}
+
+/* Button container */
+.rename-modal-buttons {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    margin-top: 20px; /* Space above buttons */
+}
+
+/* Styling for buttons inside the rename modal */
+.rename-modal .rename-btn { /* Use specific class */
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+.rename-modal .rename-btn:hover {
+    transform: scale(1.03);
+}
+
+/* Specific button styles */
+.rename-modal .rename-btn.save {
+    background-color: #5cb85c; /* Green for save */
+    color: white;
+}
+.rename-modal .rename-btn.save:hover { background-color: #4cae4c; }
+
+.rename-modal .rename-btn.cancel {
+    background-color: #aaa; /* Grey for cancel */
+    color: white;
+}
+.rename-modal .rename-btn.cancel:hover { background-color: #999; }
+
+
+/* Styling for the general rename button */
+.rename-btn { /* Style the button in .controls */
+    padding: 8px 15px;
+    font-size: 1em;
+    border: 1px solid #8B4513;
+    border-radius: 5px;
+    background-color: #e0e0e0; /* Different color? Light grey? */
+    color: #3a1d1b;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin: 5px;
+}
+.rename-btn:hover {
+    background-color: #d0d0d0;
+}
+
 /* ... rest of styles ... */ 
