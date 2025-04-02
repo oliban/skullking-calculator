@@ -20,9 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const roundCountDisplay = document.getElementById('round-count-display');
+    const totalScoresDisplay = document.getElementById('total-scores-display');
+    const totalScoreRow = document.getElementById('total-score-row');
 
     let numPlayers = parseInt(numPlayersSelect.value);
     let numRounds = 8; // Default
+    let playerInfo = {}; // Use object to store { name: "...", emoji: "..." }
+
+    // --- ADD Unique Emojis ---
+    const playerEmojis = [
+        '☠️', '🐙', '🦜', '⚓', '⚔️', '🗺️', '👑', '💎', // Add more if needed
+        '🦑', '🦀', '💰', '🧭', '💣', '🌴', '🌊', '⛵'
+    ];
+
+    function getUniqueEmoji(index) {
+        // Return emoji based on index, loop around if more players than emojis
+        return playerEmojis[index % playerEmojis.length];
+    }
 
     function getNumberOfRounds(players) {
         if (players <= 4) return 8;
@@ -46,12 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initializeTable() {
-        headerRow.innerHTML = ''; // Clear existing header content
-        tableBody.innerHTML = ''; // Clear existing body content
+        headerRow.innerHTML = '';
+        tableBody.innerHTML = '';
+        playerInfo = {}; // Clear player info
+        totalScoreRow.innerHTML = '';
 
         numPlayers = parseInt(numPlayersSelect.value);
         numRounds = getNumberOfRounds(numPlayers);
-        if (roundCountDisplay) { // Check if element exists
+        if (roundCountDisplay) {
              roundCountDisplay.textContent = numRounds;
         }
 
@@ -62,13 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
             headerRow.appendChild(th);
         });
 
-        // Get player names
-        let playerNames = {};
+        // Get player names AND assign unique emojis
         let assignedNames = [];
         for (let i = 1; i <= numPlayers; i++) {
              const defaultName = getRandomPirateName(assignedNames);
              assignedNames.push(defaultName);
-             playerNames[i] = defaultName;
+             playerInfo[i] = { // Store name and emoji
+                 name: defaultName,
+                 emoji: getUniqueEmoji(i - 1) // Get emoji based on 0-based index
+             };
         }
 
         // Create rows: one row per player per round, using rowspan for Round
@@ -87,9 +105,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     tr.appendChild(tdRound);
                 }
 
-                // 2. Player Name Cell
+                // 2. Player Name Cell - Use unique emoji
                 const tdPlayer = document.createElement('td');
-                tdPlayer.textContent = playerNames[player];
+                if (playerInfo[player]) { // Check player exists
+                    tdPlayer.textContent = `${playerInfo[player].emoji} ${playerInfo[player].name}`; // Use specific emoji
+                } else {
+                    tdPlayer.textContent = `Spelare ${player}`; // Fallback
+                }
                 tdPlayer.classList.add('player-name-cell');
                 tr.appendChild(tdPlayer);
 
@@ -97,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tdBid = document.createElement('td');
                 const bidSelect = document.createElement('select');
                 bidSelect.id = `r${round}-p${player}-bid`;
-                bidSelect.title = `Spelare ${playerNames[player]} - Bud Runda ${round}`;
+                bidSelect.title = `Spelare ${playerInfo[player]?.name || player} - Bud Runda ${round}`; // Use name if available
                 bidSelect.addEventListener('change', calculateScores);
                 const defaultBidOption = document.createElement('option');
                 defaultBidOption.value = ""; defaultBidOption.textContent = "-"; defaultBidOption.disabled = true; defaultBidOption.selected = true;
@@ -112,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tdTricks = document.createElement('td');
                 const tricksSelect = document.createElement('select');
                 tricksSelect.id = `r${round}-p${player}-tricks`;
-                tricksSelect.title = `Spelare ${playerNames[player]} - Stick Runda ${round}`;
+                tricksSelect.title = `Spelare ${playerInfo[player]?.name || player} - Stick Runda ${round}`; // Use name if available
                 tricksSelect.addEventListener('change', calculateScores);
                 const defaultTricksOption = document.createElement('option');
                 defaultTricksOption.value = ""; defaultTricksOption.textContent = "-"; defaultTricksOption.disabled = true; defaultTricksOption.selected = true;
@@ -140,13 +162,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 bonusButton.textContent = 'Bonus';
                 bonusButton.dataset.mermaid = 'false';
                 bonusButton.dataset.pirates = '0';
-                bonusButton.addEventListener('click', () => openBonusModal(round, player, playerNames[player], bonusButton));
+                // Pass player name for modal title
+                const currentName = playerInfo[player]?.name || `Spelare ${player}`;
+                bonusButton.addEventListener('click', () => openBonusModal(round, player, currentName, bonusButton));
                 tdBonus.appendChild(bonusButton);
                 tr.appendChild(tdBonus);
 
                 tableBody.appendChild(tr);
             }
         }
+
+        // --- Setup Footer Row based on NEW sketch ---
+        totalScoreRow.innerHTML = ''; // Clear again just in case
+
+        // 1. Create "Total" cell with rowspan (matching numPlayers conceptually)
+        const tdTotalLabel = document.createElement('td');
+        tdTotalLabel.textContent = 'Total';
+        tdTotalLabel.rowSpan = numPlayers > 0 ? numPlayers : 1; // Set rowspan to match player count
+        tdTotalLabel.classList.add('total-label-cell'); // Add class for styling
+        totalScoreRow.appendChild(tdTotalLabel);
+
+        // 2. Create ONE cell to hold all player scores (will span columns visually)
+        // NOTE: This cell is added only ONCE, not in the player loop.
+        // It seems the sketch implies the 'Total' cell spans vertically,
+        // and the player scores are listed vertically next to it.
+        // This requires a slightly different structure or interpretation.
+
+        // ---- REVISED APPROACH for Footer based on visual sketch ----
+        // We need multiple rows in the tfoot, or a single row with complex cell content.
+        // Let's try a single row, where the second cell contains a list.
+
+        totalScoreRow.innerHTML = ''; // Clear previous attempt
+
+        const tdFooterTotal = document.createElement('td');
+        tdFooterTotal.textContent = 'Total';
+        // No rowspan needed if only one footer row
+        totalScoreRow.appendChild(tdFooterTotal);
+
+        const tdPlayerScores = document.createElement('td');
+        // Span the remaining 5 columns (Spelare, Bud, Stick, Poäng, Bonus)
+        tdPlayerScores.colSpan = 5;
+        tdPlayerScores.id = 'player-totals-list-cell'; // ID for updating content
+        totalScoreRow.appendChild(tdPlayerScores);
+
+        // --- End Footer Setup ---
+
+        calculateScores();
     }
 
     function openBonusModal(round, player, playerName, buttonElement) {
@@ -231,6 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateScores() {
+        const playerTotals = {};
+        for (let i = 1; i <= numPlayers; i++) {
+            playerTotals[i] = 0;
+        }
+
         const rows = tableBody.querySelectorAll('tr');
         rows.forEach(row => {
             const rowIdMatch = row.id.match(/r(\d+)-p(\d+)-row/);
@@ -265,7 +331,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             scoreDisplay.textContent = roundScore;
-        });
+
+            // Add round score to player's total
+            if (playerTotals.hasOwnProperty(player)) {
+                playerTotals[player] += roundScore;
+            }
+        }); // End of rows.forEach loop
+
+        // --- Assign Medals based on Total Scores ---
+
+        // 1. Create sorted scores array: [ { index: 1, score: 100 }, { index: 2, score: 50 }, ... ]
+        const sortedPlayers = Object.entries(playerTotals) // [ ['1', 100], ['2', 50], ... ]
+                                .map(([index, score]) => ({ index: parseInt(index), score: score }))
+                                .sort((a, b) => b.score - a.score); // Sort descending by score
+
+        // 2. Get unique top scores (max 3 needed for medals)
+        const uniqueScores = [...new Set(sortedPlayers.map(p => p.score))].sort((a, b) => b - a);
+        const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -Infinity;
+        const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -Infinity;
+        const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -Infinity;
+
+        // 3. Assign medals based on scores
+        const playerMedals = {};
+        for (const player of sortedPlayers) {
+            // Assign medal only if score is > 0 or based on your ranking preference for negative scores
+            if (player.score === goldScore && player.score > -Infinity ) { // Check score exists
+                playerMedals[player.index] = '🥇';
+            } else if (player.score === silverScore && player.score > -Infinity) {
+                playerMedals[player.index] = '🥈';
+            } else if (player.score === bronzeScore && player.score > -Infinity) {
+                playerMedals[player.index] = '🥉';
+            } else {
+                playerMedals[player.index] = ''; // No medal
+            }
+        }
+
+        // --- Update the total scores display in the single footer cell ---
+        const totalsCell = document.getElementById('player-totals-list-cell');
+        if (totalsCell) {
+            totalsCell.innerHTML = ''; // Clear previous content
+            const scoresList = document.createElement('div');
+            scoresList.className = 'footer-scores-list';
+
+            // Loop 1 to numPlayers to maintain the original player order
+            for (let i = 1; i <= numPlayers; i++) {
+                if (playerInfo.hasOwnProperty(i)) { // Check if player exists for this index
+                    const pInfo = playerInfo[i]; // Get player's info object
+                    const playerScore = playerTotals[i] || 0;
+                    const medal = playerMedals[i] || ''; // Get medal for this player index
+
+                    const scoreEntry = document.createElement('div');
+                    scoreEntry.className = 'footer-score-entry';
+                    // Use player's specific emoji here too
+                    scoreEntry.textContent = `${pInfo.emoji} ${medal ? medal + ' ' : ''}${pInfo.name}: ${playerScore}`;
+                    scoresList.appendChild(scoreEntry);
+                }
+            }
+            totalsCell.appendChild(scoresList);
+        }
     }
 
     numPlayersSelect.addEventListener('change', initializeTable);
