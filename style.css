@@ -456,20 +456,21 @@ td.player-name-cell {
 .rename-modal .rename-btn.cancel:hover { background-color: #999; }
 
 
-/* Styling for the general rename button */
-.rename-btn { /* Style the button in .controls */
+/* Styling for the general rename button IN THE CONTROLS */
+#rename-players-btn { /* Use ID for specificity */
     padding: 8px 15px;
     font-size: 1em;
-    border: 1px solid #8B4513;
+    border: 1px solid #8B4513; /* Dark brown border (match others) */
     border-radius: 5px;
-    background-color: #e0e0e0; /* Different color? Light grey? */
-    color: #3a1d1b;
+    background-color: #d2b48c; /* Tan (match new-game-btn) */
+    color: #3a1d1b; /* Dark brown text (match new-game-btn) */
     cursor: pointer;
     transition: background-color 0.2s;
-    margin: 5px;
+    margin: 5px; /* Keep margin */
+    vertical-align: middle; /* Align with select box */
 }
-.rename-btn:hover {
-    background-color: #d0d0d0;
+#rename-players-btn:hover {
+    background-color: #c1a37c; /* Slightly darker tan on hover */
 }
 
 /* ... rest of styles ... */ 

@@ -641,7 +641,12 @@ document.addEventListener('DOMContentLoaded', () => {
     numPlayersSelect.addEventListener('change', () => initializeTable(false));
     newGameBtnTop.addEventListener('click', startNewGame);
     newGameBtnBottom.addEventListener('click', startNewGame);
-    renamePlayersBtn.addEventListener('click', openRenamePlayersModal); // Listener for new button
+
+    // Add console log to rename button listener
+    renamePlayersBtn.addEventListener('click', () => {
+        console.log("Rename Players button clicked!"); // <<< ADDED LOG
+        openRenamePlayersModal();
+    });
 
     document.addEventListener('click', (event) => {
         // Close ALL modals on outside click
