@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalScoresDisplay = document.getElementById('total-scores-display');
     const totalScoreRow = document.getElementById('total-score-row');
 
+    // --- Get New Game Buttons ---
+    const newGameBtnTop = document.getElementById('new-game-btn-top');
+    const newGameBtnBottom = document.getElementById('new-game-btn-bottom');
+
     let numPlayers = parseInt(numPlayersSelect.value);
     let numRounds = 8; // Default
     let playerInfo = {}; // Use object to store { name: "...", emoji: "..." }
@@ -59,11 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return availableNames[randomIndex];
     }
 
-    function initializeTable() {
+    function initializeTable(reusePlayers = false) {
         headerRow.innerHTML = '';
         tableBody.innerHTML = '';
-        playerInfo = {}; // Clear player info
         totalScoreRow.innerHTML = '';
+        if (!reusePlayers) { // Only reset players if not reusing
+             playerInfo = {};
+        }
 
         numPlayers = parseInt(numPlayersSelect.value);
         numRounds = getNumberOfRounds(numPlayers);
@@ -78,20 +84,33 @@ document.addEventListener('DOMContentLoaded', () => {
             headerRow.appendChild(th);
         });
 
-        // Get player names AND assign unique emojis
-        let assignedNames = [];
-        for (let i = 1; i <= numPlayers; i++) {
-             const defaultName = getRandomPirateName(assignedNames);
-             assignedNames.push(defaultName);
-             playerInfo[i] = { // Store name and emoji
-                 name: defaultName,
-                 emoji: getUniqueEmoji(i - 1) // Get emoji based on 0-based index
-             };
+        // --- Get player names/emojis OR reuse them ---
+        if (!reusePlayers) {
+            let assignedNames = [];
+            for (let i = 1; i <= numPlayers; i++) {
+                const defaultName = getRandomPirateName(assignedNames);
+                assignedNames.push(defaultName);
+                playerInfo[i] = {
+                    name: defaultName,
+                    emoji: getUniqueEmoji(i - 1)
+                };
+            }
+        } else {
+            // Make sure we still only use players up to the current numPlayers setting
+            // (In case user changed player count THEN clicked New Game)
+            const currentValidPlayerIds = Object.keys(playerInfo).map(id => parseInt(id)).filter(id => id <= numPlayers);
+            const newPlayerInfo = {};
+            currentValidPlayerIds.forEach(id => {
+                newPlayerInfo[id] = playerInfo[id];
+            });
+            playerInfo = newPlayerInfo; // Keep only relevant players
         }
 
         // Create rows: one row per player per round, using rowspan for Round
         for (let round = 1; round <= numRounds; round++) {
             for (let player = 1; player <= numPlayers; player++) {
+                if (!playerInfo[player]) continue; // Skip if player was removed due to count change
+
                 const tr = document.createElement('tr');
                 tr.id = `r${round}-p${player}-row`;
                 tr.classList.add(round % 2 === 0 ? 'round-group-even' : 'round-group-odd');
@@ -107,11 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 2. Player Name Cell - Use unique emoji
                 const tdPlayer = document.createElement('td');
-                if (playerInfo[player]) { // Check player exists
-                    tdPlayer.textContent = `${playerInfo[player].emoji} ${playerInfo[player].name}`; // Use specific emoji
-                } else {
-                    tdPlayer.textContent = `Spelare ${player}`; // Fallback
-                }
+                tdPlayer.textContent = `${playerInfo[player].emoji} ${playerInfo[player].name}`;
                 tdPlayer.classList.add('player-name-cell');
                 tr.appendChild(tdPlayer);
 
@@ -119,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tdBid = document.createElement('td');
                 const bidSelect = document.createElement('select');
                 bidSelect.id = `r${round}-p${player}-bid`;
-                bidSelect.title = `Spelare ${playerInfo[player]?.name || player} - Bud Runda ${round}`; // Use name if available
+                bidSelect.title = `Spelare ${playerInfo[player].name} - Bud Runda ${round}`;
                 bidSelect.addEventListener('change', calculateScores);
                 const defaultBidOption = document.createElement('option');
                 defaultBidOption.value = ""; defaultBidOption.textContent = "-"; defaultBidOption.disabled = true; defaultBidOption.selected = true;
@@ -134,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tdTricks = document.createElement('td');
                 const tricksSelect = document.createElement('select');
                 tricksSelect.id = `r${round}-p${player}-tricks`;
-                tricksSelect.title = `Spelare ${playerInfo[player]?.name || player} - Stick Runda ${round}`; // Use name if available
+                tricksSelect.title = `Spelare ${playerInfo[player].name} - Stick Runda ${round}`;
                 tricksSelect.addEventListener('change', calculateScores);
                 const defaultTricksOption = document.createElement('option');
                 defaultTricksOption.value = ""; defaultTricksOption.textContent = "-"; defaultTricksOption.disabled = true; defaultTricksOption.selected = true;
@@ -162,8 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 bonusButton.textContent = 'Bonus';
                 bonusButton.dataset.mermaid = 'false';
                 bonusButton.dataset.pirates = '0';
-                // Pass player name for modal title
-                const currentName = playerInfo[player]?.name || `Spelare ${player}`;
+                const currentName = playerInfo[player].name;
                 bonusButton.addEventListener('click', () => openBonusModal(round, player, currentName, bonusButton));
                 tdBonus.appendChild(bonusButton);
                 tr.appendChild(tdBonus);
@@ -391,7 +405,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    numPlayersSelect.addEventListener('change', initializeTable);
+    // --- Function to handle New Game Button Click ---
+    function startNewGame() {
+        if (confirm('Är du säker på att du vill starta en ny match?\n(Poängen nollställs men spelare behålls)')) {
+            // Call initializeTable, telling it to reuse players
+            initializeTable(true);
+        }
+    }
+
+    // --- Event Listeners ---
+    numPlayersSelect.addEventListener('change', () => initializeTable(false)); // Standard init
+    newGameBtnTop.addEventListener('click', startNewGame); // Add listener
+    newGameBtnBottom.addEventListener('click', startNewGame); // Add listener
+
     document.addEventListener('click', (event) => { // Close modal on outside click
         const modal = document.getElementById('bonus-modal-dynamic');
         if (modal && !modal.contains(event.target) && !event.target.classList.contains('bonus-button')) {
@@ -399,5 +425,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    initializeTable();
+    initializeTable(false); // Initial load generates players
 }); 
