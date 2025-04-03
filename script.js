@@ -234,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateScores();
     }
 
+    // --- Function to open the bonus modal ---
     function openBonusModal(round, player, playerName, buttonElement) {
         const existingModal = document.getElementById('bonus-modal-dynamic');
         if (existingModal) existingModal.remove();
@@ -262,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const mermaidLabel = document.createElement('label');
         mermaidLabel.htmlFor = mermaidCheckbox.id;
-        mermaidLabel.textContent = ' M+SK (Sjöjungfru fångar SK)';
+        mermaidLabel.textContent = ' Sjöjungfru fångar Skull King';
         mermaidDiv.appendChild(mermaidCheckbox);
         mermaidDiv.appendChild(mermaidLabel);
         modal.appendChild(mermaidDiv);
@@ -271,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const pirateDiv = document.createElement('div');
         const pirateLabel = document.createElement('label');
         pirateLabel.htmlFor = `modal-r${round}-p${player}-pirates`;
-        pirateLabel.textContent = 'SK+P x (Pirater fångade med SK): ';
+        pirateLabel.textContent = 'Pirater fångade med Skull King: ';
         const pirateSelect = document.createElement('select');
         pirateSelect.id = `modal-r${round}-p${player}-pirates`;
         for (let k = 0; k <= 5; k++) { // Max 5 pirates
@@ -299,18 +300,26 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(modal);
     }
 
+    // --- Function to update bonus button appearance based on data attributes ---
     function updateBonusButtonVisuals(buttonElement) {
         const hasMermaid = buttonElement.dataset.mermaid === 'true';
         const pirateCount = parseInt(buttonElement.dataset.pirates || '0');
-        let bonusText = 'Bonus';
+
+        let bonusText = 'Bonus'; // Default text
         let activeBonuses = [];
-        if (hasMermaid) activeBonuses.push("M");
-        if (pirateCount > 0) activeBonuses.push(`P:${pirateCount}`);
+
+        if (hasMermaid) {
+            activeBonuses.push("Sjöjungfru"); // Klartext för sjöjungfru
+        }
+        if (pirateCount > 0) {
+            activeBonuses.push(`Pirater: ${pirateCount}`); // Klartext för pirater
+        }
+
         if (activeBonuses.length > 0) {
-            bonusText = activeBonuses.join('/');
-            buttonElement.classList.add('has-bonus');
+            bonusText = activeBonuses.join(', '); // Join with comma and space
+            buttonElement.classList.add('has-bonus'); // Add class for styling active bonus button
         } else {
-            buttonElement.classList.remove('has-bonus');
+             buttonElement.classList.remove('has-bonus'); // Remove class if no active bonus
         }
         buttonElement.textContent = bonusText;
     }
