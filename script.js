@@ -23,6 +23,39 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { calculateSingleRoundScore };
 }
 
+// --- Combined Pirate Personas ---
+const piratePersonas = [
+    { name: "Svartskägg", emoji: "☠️" },
+    { name: "Kapten Krok", emoji: "🐙" },
+    { name: "Skräck-Roberts", emoji: "🦜" },
+    { name: "Blod-Jack", emoji: "⚓" },
+    { name: "Stormöga Stina", emoji: "⚔️" },
+    { name: "Envoyé Erik", emoji: "🗺️" },
+    { name: "Järn-Jenny", emoji: "👑" },
+    { name: "Guld-Gustav", emoji: "💎" },
+    { name: "Röda Rakel", emoji: "🦑" },
+    { name: "Pesten Petter", emoji: "🦀" },
+    { name: "Havs-Hanna", emoji: "💰" },
+    { name: "Dödskalle-Danne", emoji: "🧭" },
+    { name: "Blixt-Berit", emoji: "💣" },
+    { name: "Kölhalar-Kalle", emoji: "🌴" },
+    { name: "Salta Sara", emoji: "🌊" },
+    { name: "Mördar-Mats", emoji: "⛵" },
+    { name: "Våghals-Vera", emoji: "🏴‍☠️" }, // Example adding more
+    { name: "Tjär-Torsten", emoji: "👀" },
+    { name: "Skräckens Sigrid", emoji: "🔑" },
+    { name: "Enögda Einar", emoji: "🗡️" }
+];
+
+// --- Helper Function to Shuffle Array (Fisher-Yates) ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+    }
+    return array;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const numPlayersSelect = document.getElementById('num-players');
     const scoreTable = document.getElementById('score-table');
@@ -58,17 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let numRounds = 8; // Default
     let playerInfo = {}; // Use object to store { name: "...", emoji: "..." }
 
-    // --- ADD Unique Emojis ---
-    const playerEmojis = [
-        '☠️', '🐙', '🦜', '⚓', '⚔️', '🗺️', '👑', '💎', // Add more if needed
-        '🦑', '🦀', '💰', '🧭', '💣', '🌴', '🌊', '⛵'
-    ];
-
-    function getUniqueEmoji(index) {
-        // Return emoji based on index, loop around if more players than emojis
-        return playerEmojis[index % playerEmojis.length];
-    }
-
     function getNumberOfRounds(players) {
         if (players <= 4) return 8;
         if (players === 5) return 7;
@@ -76,29 +98,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return 8;
     }
 
-    const pirateNames = [
-        "Svartskägg", "Kapten Krok", "Skräck-Roberts", "Blod-Jack", "Stormöga Stina",
-        "Envoyé Erik", "Järn-Jenny", "Guld-Gustav", "Röda Rakel", "Pesten Petter",
-        "Havs-Hanna", "Dödskalle-Danne", "Blixt-Berit", "Kölhalar-Kalle", "Salta Sara",
-        "Mördar-Mats", "Våghals-Vera", "Tjär-Torsten", "Skräckens Sigrid", "Enögda Einar"
-    ];
-
-    function getRandomPirateName(existingNames) {
-        const availableNames = pirateNames.filter(name => !existingNames.includes(name));
-        if (availableNames.length === 0) return `Pirat ${existingNames.length + 1}`;
-        const randomIndex = Math.floor(Math.random() * availableNames.length);
-        return availableNames[randomIndex];
-    }
-
     function initializeTable(reusePlayers = false) {
         headerRow.innerHTML = '';
         tableBody.innerHTML = '';
         totalScoreRow.innerHTML = '';
         if (!reusePlayers) { // Only reset players if not reusing
-             playerInfo = {};
+             playerInfo = {}; // Clear existing info
+
+             // --- Assign unique, shuffled personas ---
+             const shuffledPersonas = shuffleArray([...piratePersonas]); // Shuffle a copy
+             const currentNumPlayers = parseInt(numPlayersSelect.value); // Use current selected value
+             for (let i = 1; i <= currentNumPlayers; i++) {
+                 if (shuffledPersonas[i - 1]) { // Check if enough personas exist
+                     playerInfo[i] = shuffledPersonas[i - 1];
+                 } else {
+                     // Fallback if not enough unique personas (shouldn't happen with current list)
+                     playerInfo[i] = { name: `Pirat ${i}`, emoji: '❓' };
+                 }
+             }
+             // Update numPlayers state variable AFTER assignments
+             numPlayers = currentNumPlayers;
         }
 
-        numPlayers = parseInt(numPlayersSelect.value);
         numRounds = getNumberOfRounds(numPlayers);
         if (roundCountDisplay) {
              roundCountDisplay.textContent = numRounds;
@@ -110,28 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
             th.textContent = text;
             headerRow.appendChild(th);
         });
-
-        // --- Get player names/emojis OR reuse them ---
-        if (!reusePlayers) {
-            let assignedNames = [];
-            for (let i = 1; i <= numPlayers; i++) {
-            const defaultName = getRandomPirateName(assignedNames);
-            assignedNames.push(defaultName);
-                playerInfo[i] = {
-                    name: defaultName,
-                    emoji: getUniqueEmoji(i - 1)
-                };
-            }
-        } else {
-            // Make sure we still only use players up to the current numPlayers setting
-            // (In case user changed player count THEN clicked New Game)
-            const currentValidPlayerIds = Object.keys(playerInfo).map(id => parseInt(id)).filter(id => id <= numPlayers);
-            const newPlayerInfo = {};
-            currentValidPlayerIds.forEach(id => {
-                newPlayerInfo[id] = playerInfo[id];
-            });
-            playerInfo = newPlayerInfo; // Keep only relevant players
-        }
 
         // Create rows: one row per player per round, using rowspan for Round
         for (let round = 1; round <= numRounds; round++) {

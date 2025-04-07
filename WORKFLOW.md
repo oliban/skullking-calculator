@@ -12,7 +12,7 @@ This document outlines the agreed-upon collaborative workflow for developing the
 6.  **AI**: Implements the required code changes (e.g., in `script.js`, `index.html`, `style.css`).
 7.  **AI**: Runs the unit tests using `npm test` and confirms they pass.
 8.  **USER**: Manually tests the application in the browser to verify the changes work as expected.
-9.  **AI**: Suggests a Git commit message summarizing the changes made.
+9.  **AI**: Suggests a **short, concise** Git commit message summarizing the changes made.
 10. **USER**: Handles Git staging, committing, and pushing.
 11. **AI**: Posts a celebratory message! 🥳🎉
 
