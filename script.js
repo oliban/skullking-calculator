@@ -1,3 +1,28 @@
+// --- NEW Pure Function for calculating single round score ---
+// This function is defined outside the DOMContentLoaded listener
+// so it can be required and tested by Node.js/Jest.
+function calculateSingleRoundScore(bid, tricksWon, round, mermaidCapturesSK, piratesCapturedBySK) {
+    let roundScore = 0;
+    if (!isNaN(bid) && !isNaN(tricksWon)) {
+        if (bid === tricksWon) {
+            // Correct bid
+            roundScore = (bid === 0) ? round * 10 : bid * 20;
+            // Add bonus points ONLY if the bid was correct
+            if (mermaidCapturesSK) roundScore += 50;
+            roundScore += piratesCapturedBySK * 30;
+        } else {
+            // Incorrect bid
+            roundScore = (bid === 0) ? round * -10 : Math.abs(bid - tricksWon) * -10;
+        }
+    }
+    return roundScore;
+}
+
+// Export for testing if in Node.js environment
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { calculateSingleRoundScore };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const numPlayersSelect = document.getElementById('num-players');
     const scoreTable = document.getElementById('score-table');
@@ -359,11 +384,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const bidSelect = row.querySelector(`#r${round}-p${player}-bid`);
             const tricksSelect = row.querySelector(`#r${round}-p${player}-tricks`);
             const scoreDisplay = row.querySelector(`#r${round}-p${player}-score`);
-            const bonusButton = row.querySelector(`#r${round}-p${player}-bonus-btn`); // Needed if recalculating
+            const bonusButton = row.querySelector(`#r${round}-p${player}-bonus-btn`); // Needed for bonus data
 
             if (!bidSelect || !tricksSelect || !scoreDisplay || !bonusButton) return;
 
-            // --- Recalculate score here for consistency ---
+            // --- Get values for calculation ---
             const bidValue = bidSelect.value;
             const tricksValue = tricksSelect.value;
             const bid = bidValue === "" ? NaN : parseInt(bidValue);
@@ -371,19 +396,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const mermaidCapturesSK = bonusButton.dataset.mermaid === 'true';
             const piratesCapturedBySK = parseInt(bonusButton.dataset.pirates || '0');
 
-                let roundScore = 0;
-                if (!isNaN(bid) && !isNaN(tricksWon)) {
-                    if (bid === tricksWon) {
-                    roundScore = (bid === 0) ? round * 10 : bid * 20;
-                    if (mermaidCapturesSK) roundScore += 50;
-                        roundScore += piratesCapturedBySK * 30;
-                } else {
-                    roundScore = (bid === 0) ? round * -10 : Math.abs(bid - tricksWon) * -10;
-                }
-            }
-            scoreDisplay.textContent = roundScore; // Update the score display
-            // --- End Recalculation ---
+            // --- Use the calculation function (now defined globally) ---
+            const roundScore = calculateSingleRoundScore(bid, tricksWon, round, mermaidCapturesSK, piratesCapturedBySK);
 
+            // Update the score display in the table
+            scoreDisplay.textContent = roundScore;
+
+            // --- Accumulate total score ---
             if (playerTotals.hasOwnProperty(player)) {
                 playerTotals[player] += roundScore;
             }
